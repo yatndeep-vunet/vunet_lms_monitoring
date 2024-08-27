@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Home</title>
+    <script src="https://cdn.tailwindcss.com/"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+</head>
+
+<body>
+    <!-- <h1>Shree Ganeshay Namah</h1> -->
+    <!-- Books Table  -->
+   
+    {% block content %}
+    <!-- Include another partial -->
+    {% include 'partials/librarian_navbar.html' %}
+    {% endblock %}
+    <div class="w-full overflow-scroll overflow-y-hidden overflow-x-hidden mt-5 px-5">
+        <table class="w-full">
+            <thead class="bg-blue-800 text-white">
+                <tr>
+                    <th class="border border-blue-300 px-4 py-2 ">Book Name </th>
+                    <th class="border border-blue-300 px-4 py-2 ">User Name </th>
+                    <th class="border border-blue-300 px-4 py-2 ">Issue Approve Status</th>
+                    <th class="border border-blue-300 px-4 py-2 ">Issue Date</th>
+                    <th class="border border-blue-300 px-4 py-2 ">Return Approve Status</th>
+                    <th class="border border-blue-300 px-4 py-2 ">Return Date</th>
+                    <th class="border border-blue-300 px-4 py-2">Fine (if any)</th>
+                    <th class="border border-blue-300 px-4 py-2">Delete</th>
+
+                </tr>
+            </thead>
+            <tbody>
+                {% for book in book_issue_request_record %}
+                <tr class="hover:bg-blue-100 text-center">
+                    <td class="border border-blue-300 px-4 py-2">{{book.book_id}}</td>
+                    <td class="border border-blue-300 px-4 py-2">{{book.user_id}}</td>
+                    <td class="border border-blue-300 px-4 py-2">
+                        <div>
+                                {% if book.is_issue_approve == False %}
+                                <button onclick="approve_request('{{book.book_issue_id}}')" class="bg-yellow-600 text-white p-2">Approve Request</button>
+                                {% else %}
+                                <div  class="bg-green-600 text-white p-2 ">Already Approved</div>
+                                {% endif %} 
+                        </div>
+                      
+                    </td>
+                    <td class="border border-blue-300 px-4 py-2">{{book.issue_date}}</td>
+                    <td class="border border-blue-300 px-4 py-2 flex justify-center items-center">
+                        
+                        {% if book.is_return_approve == None %}
+                            <div class="bg-gray-600 text-white p-2 w-fit">Not Requested</div>
+                        {% elif book.is_return_approve == False %}
+                            <button class="bg-yellow-600 text-white p-2" onclick="return_request('{{ book.book_issue_id }}')">Approve Return</button>
+                        {% else %}
+                            <div class="bg-green-600 text-white p-2 w-fit">Already Approved</div>
+                        {% endif %}
+
+
+                    </td>
+                    <td class="border border-blue-300 px-4 py-2">{{book.return_date}}</td>
+                    <td class="border border-blue-300 px-4 py-2">{{book.fine}}</td>
+                    <td class="border border-blue-300 px-4 py-2">
+                        <button class="bg-red-500 p-2 text-white hover:bg-red-700" onclick="delete_request('{{book.book_issue_id}}')">
+                                Delete
+                        </button> </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+</body>
+
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+    function approve_request(book_issue_id)
+    {
+        $('#loader').fadeIn('fast')
+        const csrf_token = '{{csrf_token}}'
+        $.ajax({
+                type: 'POST',
+                url: "/librarian/approve_issue_request",
+                data: {
+                    'csrfmiddlewaretoken': csrf_token,
+                    'book_issue_id' : book_issue_id
+                },
+                dataType: 'json',
+                success: function (data) {
+                    // Display the message in the div
+                Swal.fire({
+                    title: "Success",
+                    text: data.message,
+                    icon: "success",
+                    });
+                    $('#loader').fadeIn('slow');
+                    location.reload()
+                },
+                error: function (xhr, status, error) {
+                    console.error('Error:', error);
+                }
+            });   
+    }
+
+    function return_request(book_issue_id)
+    {
+        $('#loader').fadeIn('fast')
+        const csrf_token = '{{csrf_token}}'
+        $.ajax({
+                type: 'POST',
+                url: "/librarian/approve_return_request",
+                data: {
+                    'csrfmiddlewaretoken': csrf_token,
+                    'book_issue_id' : book_issue_id
+                },
+                dataType: 'json',
+                success: function (data) {
+                    // Display the message in the div
+                Swal.fire({
+                    title: "Success",
+                    text: data.message,
+                    icon: "success",
+                    });
+                    $('#loader').fadeIn('slow');
+                    location.reload()
+                },
+                error: function (xhr, status, error) {
+                    console.error('Error:', error);
+                }
+            });   
+    }
+    function  delete_request(book_issue_id)
+    {
+        $('#loader').fadeIn('fast')
+        const csrf_token = '{{csrf_token}}'
+        $.ajax({
+                type: 'POST',
+                url: "/librarian/delete_issue_record",
+                data: {
+                    'csrfmiddlewaretoken': csrf_token,
+                    'book_issue_id' : book_issue_id
+                },
+                dataType: 'json',
+                success: function (data) {
+                    // Display the message in the div
+                Swal.fire({
+                    title: "Success",
+                    text: data.message,
+                    icon: "success",
+                    });
+                    $('#loader').fadeIn('slow');
+                    location.reload()
+                },
+                error: function (xhr, status, error) {
+                    console.error('Error:', error);
+                }
+            });   
+    }
+
+
+
+</script>
+
+</html>

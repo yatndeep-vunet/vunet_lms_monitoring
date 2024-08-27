@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VU_LMS Login</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body>
+    <!-- <p>Shree Ganeshay Namah</p> -->
+   
+    {% block content %}
+    <!-- Include another partial -->
+    {% include 'partials/navbar.html' %}
+    {% endblock %}
+
+    <section class="flex justify-center items-center h-[70vh] flex-col">
+      <h1 class="text-center text-2xl my-2 font-bold">Librarian Login</h1>
+        <div class="border-2 border-gray-300 w-[80%]">
+            <form class="flex flex-col p-4 gap-y-5" method="post">
+                <input type="hidden" name="csrfmiddlewaretoken" value="{{ csrf_token }}">
+                <div class="flex flex-col gap-1">
+                    <label>Librarian ID</label>
+                    <input type="text" class="border-2 border-gray-300 p-1" id="librarian_id" name="librarian_id">
+                </div>
+                <div class="flex flex-col gap-1">
+                    <label>Password</label>
+                    <input type="password" class="border-2 border-gray-300 p-1" id="password" name="password">
+                </div>
+                <button class="bg-blue-600 border-2 border-blue-800 text-white font-bold text-xl p-1">Login</button>
+            </form>
+        </div>
+        
+    </section>
+
+
+</body>
+
+
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+    var message = "{{ message }}";
+    var status = "{{status}}";
+    if(status == 400)
+        {
+            Swal.fire({
+            icon: "error",
+            title: "Oops...",
+            text: message,
+            });
+        }
+      if(status == 200)
+      {
+         window.location.href = '/librarian/books'
+      }
+    
+</script>
+</html>

@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Home</title>
+    <script src="https://cdn.tailwindcss.com/"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+</head>
+
+<body>
+    <!-- <h1>Shree Ganeshay Namah</h1> -->
+    <!-- Books Table  -->
+   
+    {% block content %}
+    <!-- Include another partial -->
+    {% include 'partials/navbar.html' %}
+    {% endblock %}
+    <div class="w-full overflow-scroll overflow-y-hidden overflow-x-hidden mt-5 px-5">
+
+        <form method="get" action="/users/home" class="float-right my-2">
+            {% if query %}
+            <a href="/users/home" type="submit"
+                class="border-2 border-blue-800 bg-blue-600 hover:bg-blue-800 text-white p-2 text-lg">See All Books</a>
+            {% endif %}
+            <input type="text" name="q" placeholder="Search by book name or author" value="{{ query }}"
+                class="border-2 border-blue-400 hover:border-blue-600 p-2 rounded-sm">
+            <button type="submit"
+                class="border-2 border-blue-800 bg-blue-600 hover:bg-blue-800 text-white p-2">Search</button>
+        </form>
+        <table class="w-full">
+            <thead class="bg-blue-800 text-white">
+                <tr>
+                    <th class="border border-blue-300 px-4 py-2 ">
+                        <a
+                            href="?sort_by=book_name&order={% if sort_by == 'book_name' and order == 'asc' %}desc{% else %}asc{% endif %}">
+                            Book Name {% if sort_by == 'book_name' %} {% if order == 'asc' %}▲{% else %}▼{% endif %}
+                            {% endif %}
+                        </a>
+                    </th>
+                    <th class="border border-blue-300 px-4 py-2 ">
+                        <a
+                            href="?sort_by=book_author_name&order={% if sort_by == 'book_author_name' and order == 'asc' %}desc{% else %}asc{% endif %}">
+                            Author Name {% if sort_by == 'book_author_name' %} {% if order == 'asc' %}▲{% else %}▼{%
+                            endif %} {% endif %}
+                        </a>
+                    </th>
+                    <th class="border border-blue-300 px-4 py-2 ">Category</th>
+                    <th class="border border-blue-300 px-4 py-2 ">Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for book in page_obj %}
+                <tr class="hover:bg-blue-100">
+                    <td class="border border-blue-300 px-4 py-2">{{book.book_name}}</td>
+                    <td class="border border-blue-300 px-4 py-2">{{book.book_author_name}}</td>
+                    <td class="border border-blue-300 px-4 py-2">{{book.book_category_id}}</td>
+                    <td class="border border-blue-300 px-4 py-2 text-center"><button
+                            class="border-green-300 border-2 p-1 text-white hover:bg-green-700 bg-green-600"
+                            onclick="get_book('{{book.book_id}}')">Get Book</button></td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        <div class="mt-5">
+            <span>Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+        </div>
+
+        <div class="flex float-right  mx-4">
+            <ul class="flex gap-x-5 justify-center items-center">
+                {% if page_obj.has_previous %}
+                <li class="bg-blue-800 border-2 border-blue-600 hover:bg-blue-600 p-2 text-white text-sm"><a
+                        href="?page={{ page_obj.previous_page_number }}&sort_by={{ sort_by }}&order={{ order }}">Previous</a>
+                </li>
+                {% endif %}
+
+                {% for num in page_obj.paginator.page_range %}
+                {% if page_obj.number == num %}
+                <li class="text-xl">{{ num }}</li>
+                {% else %}
+                <li class="text-xl"><a href="?page={{ num }}&sort_by={{ sort_by }}&order={{ order }}">{{ num }}</a>
+                </li>
+                {% endif %}
+                {% endfor %}
+
+                {% if page_obj.has_next %}
+                <li class="bg-blue-800 border-2 border-blue-600 hover:bg-blue-600 p-2 text-white text-sm"><a
+                        href="?page={{ page_obj.previous_page_number }}&sort_by={{ sort_by }}&order={{ order }}"><a
+                            href="?page={{ page_obj.next_page_number }}&sort_by={{ sort_by }}&order={{ order }}">Next</a>
+                </li>
+                {% endif %}
+            </ul>
+        </div>
+    </div>
+
+</body>
+
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+    function get_book(book_id)
+    {
+        $('#loader').fadeIn('fast');
+        const csrfToken = '{{ csrf_token }}';
+        $.ajax({
+                type: 'POST',
+                url: "/users/get_book",
+
+               
+                data: {
+                    'book_id' : book_id,
+                    'csrfmiddlewaretoken': csrfToken
+                },
+                dataType: 'json',
+                success: function (data) {
+                    // Display the message in the div
+                                        Swal.fire({
+                    title: "Success",
+                    text: data.message,
+                    icon: "success",
+                    });
+                    $('#loader').fadeIn('slow');
+                    location.reload()
+                },
+                error: function (xhr, status, error) {
+                    console.error('Error:', error);
+                }
+            });
+    }
+</script>
+
+</html>

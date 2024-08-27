@@ -1,0 +1,37 @@
+<script src="https://cdn.tailwindcss.com/"></script>
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+<div id="loader" class="fixed inset-0 bg-white bg-opacity-75 flex justify-center items-center z-50">
+    <div class=" animate-spin rounded-full h-32 w-32 border-t-4 border-b-4 border-blue-500"></div>
+</div>
+<nav>
+    <div class="bg-gray-200 border-2 border-gray-300 flex justify-between p-4 items-center">
+        <div class="w-[30%] font-bold text-2xl">
+            <p>VuNet LMS</p>
+        </div>
+        <div class="flex justify-evenly flex-1 w-[60%] text-xl">
+            <a href="/librarian/books">
+                <p>Books</p>
+            </a>
+            <a href="/librarian/issue_request">
+                <p>Issued Record</p>
+            </a>
+            <a href="/librarian/logout">
+                <p>Logout</p>
+            </a>
+        </div>
+    </div>
+</nav>
+
+
+<script>
+ $(window).on('load', function () {
+        // Hide the loader after the page is fully loaded
+        $('#loader').fadeOut('slow');
+    });
+
+    $(window).on('beforeunload', function () {
+        // Show the loader when the page starts unloading/loading
+        $('#loader').fadeIn('fast');
+    });
+</script>

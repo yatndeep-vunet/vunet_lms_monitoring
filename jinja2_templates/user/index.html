@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VuNet LMS</title>
+   
+    <!-- Include Mermaid.js via CDN -->
+    <script type="module">
+        import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+        mermaid.initialize({ startOnLoad: true });
+    </script>
+      <script src="https://cdn.tailwindcss.com/"></script>
+      <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+</head>
+<body>
+
+    {% block content %}
+    <!-- Include another partial -->
+    {% include 'partials/main_navbar.html' %}
+    {% endblock %}
+    <h1 class="text-3xl text-center font-extrabold mt-5">Project Architecture Flowchart</h1>
+    
+    <!-- Mermaid.js Flowchart Code -->
+    <div class="mermaid">
+        graph TD
+        A[Login Page] --> B{Is User Logged In?}
+        B --> |No| A
+        B --> |Yes| C{User Role}
+        
+        C --> |Librarian| D[Librarian Dashboard]
+        C --> |User| J[User Dashboard]
+        
+        %% Librarian Actions
+        D --> E[Add Book Category]
+        E --> F{Category Exists?}
+        F --> |Yes| G[Show 'Already Exists' Message]
+        F --> |No| H[Add New Category]
+        
+        D --> I[Add Book]
+        I --> K{Book Exists?}
+        K --> |Yes| L[Show 'Book Already Exists' Message]
+        K --> |No| M[Add New Book]
+        
+        D --> N[Delete Book]
+        N --> O{Is Book Issued?}
+        O --> |Yes| P[Show 'Cannot Delete' Message]
+        O --> |No| Q[Delete Book]
+        
+        D --> R[View Book List]
+        D --> S[View User Book Requests]
+        D --> T[Approve Book Request]
+        D --> U[Approve Return Request]
+        
+        %% User Actions
+        J --> V[View Book List]
+        J --> W[Request Book]
+        J --> X[Request Book Return]
+        
+        %% Responses for Users
+        T --> Z[Notify User of Approval]
+        U --> AA[Notify User of Return Approval]
+    </div>
+</body>
+</html>
