@@ -19,6 +19,14 @@ class BookSerializer(serializers.ModelSerializer):
     class Meta:
         model = BookName
         fields = ['book_id', 'book_name', 'book_author_name', 'book_category_id']
+
+class BookIDSerializer(serializers.Serializer):
+    book_id = serializers.IntegerField()
+
+class BookIssueSerializer(serializers.Serializer):
+    book_issue_id = serializers.IntegerField()
+
+
 class Book_Issue_Record_Serializer(serializers.ModelSerializer):
     class Meta: 
         model = Book_Issue_Record

@@ -1,7 +1,7 @@
 from django.shortcuts import render
 from rest_framework import viewsets ,status ,filters
 from core_app.models import BookName , User , Librarian , Books_Category , Book_Issue_Record
-from .serializers import BookSerializer , UserRegisterSerializer , UserLoginSerializer , LibrarianLoginSerializer , AddBookSerializer , AddCategorySerializer , BookCategorySerializer , Book_Issue_Record_Serializer
+from .serializers import BookSerializer , UserRegisterSerializer , UserLoginSerializer , LibrarianLoginSerializer , AddBookSerializer , AddCategorySerializer , BookCategorySerializer , Book_Issue_Record_Serializer , BookIDSerializer , BookIssueSerializer
 from django.core.mail import send_mail , BadHeaderError
 from rest_framework.decorators import action
 from rest_framework.response import Response
@@ -19,7 +19,10 @@ logger = logging.getLogger(__name__)
 
 class UserViewSet(viewsets.ViewSet):
     def get_serializer_class(self):
-        return UserRegisterSerializer
+         if self.action == 'user_login':
+            return UserLoginSerializer
+         return UserRegisterSerializer
+
 
     def get_serializer(self, *args, **kwargs):
         return self.get_serializer_class()(*args, **kwargs)
@@ -125,48 +128,51 @@ class UserViewSet(viewsets.ViewSet):
     
     @action(detail=False, methods=['post'])
     def user_login(self, request):
-        serializer = UserLoginSerializer(data=request.data)
+        serializer = self.get_serializer(data=request.data)
         if serializer.is_valid():
             user_mail = serializer.validated_data.get('user_mail')
             password = serializer.validated_data.get('password')
 
-        try:
-            user = User.objects.get(user_mail=user_mail)
-            # Check if the password is correct
-            if user.password == password:
-                if user.is_email_verfied:
-                    # Store user ID in session
-                    request.session['user_mail'] = user.user_mail
-                    request.session.save()
+            try:
+                user = User.objects.get(user_mail=user_mail)
+                # Check if the password is correct
+                if user.password == password:
+                    if user.is_email_verfied:
+                        # Store user ID in session
+                        request.session['user_mail'] = user.user_mail
+                        request.session.save()
 
-                    logger.info(f'User {user_mail} logged in successfully.')
-                    
-                    return Response(
-                        {"message": "Successfully Logged In", "status_code": 200},
-                        status=status.HTTP_200_OK
-                    )
+                        logger.info(f'User {user_mail} logged in successfully.')
+                        
+                        return Response(
+                            {"message": "Successfully Logged In", "status_code": 200},
+                            status=status.HTTP_200_OK
+                        )
+                    else:
+                        return Response(
+                            {"message": "Please verify your mail", "status_code": 400},
+                            status=status.HTTP_400_BAD_REQUEST
+                        )
                 else:
                     return Response(
-                        {"message": "Please verify your mail", "status_code": 400},
+                        {"message": "Invalid Password", "status_code": 400},
                         status=status.HTTP_400_BAD_REQUEST
                     )
-            else:
+            except User.DoesNotExist:
                 return Response(
-                    {"message": "Invalid Password", "status_code": 400},
+                    {"message": "Invalid Credentials", "status_code": 400},
                     status=status.HTTP_400_BAD_REQUEST
                 )
-        except User.DoesNotExist:
-            return Response(
-                {"message": "Invalid Credentials", "status_code": 400},
-                status=status.HTTP_400_BAD_REQUEST
-            )
-        except Exception as e:
-            logger.error(f'Error occurred during login: {e}')
-            return Response(
-                {"message": "Internal Server Error", "status_code": 500},
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR
-            )
-        
+            except Exception as e:
+                logger.error(f'Error occurred during login: {e}')
+                return Response(
+                    {"message": "Internal Server Error", "status_code": 500},
+                    status=status.HTTP_500_INTERNAL_SERVER_ERROR
+                )
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+
+
         # Log Out 
     @action(detail=False, methods=['get'])
     def user_logout(self, request):
@@ -196,6 +202,8 @@ class BookViewSet(viewsets.ModelViewSet):
     def get_serializer_class(self):
         if self.action == 'add_book':
             return AddBookSerializer
+        if self.action == 'delete_book':
+            return BookIDSerializer
         return BookSerializer
 
     def get_serializer(self, *args, **kwargs):
@@ -264,30 +272,35 @@ class BookViewSet(viewsets.ModelViewSet):
     @action(detail= False , methods= ['post'])
     def delete_book(self,request):
         try:
-            book_id = request.data.get('book_id')
-            librarian_id = request.session.get('rest_librarian_id')
-            if librarian_id is None : 
-                return Response({'status':'error','message':'You are not authorize for this operation'},status=status.HTTP_401_UNAUTHORIZED)
-            try:
-                 book = BookName.objects.get(book_id=book_id)
-            except BookName.DoesNotExist:
-                return Response({'status': 'error', 'message': 'Book not found'}, status=status.HTTP_404_NOT_FOUND)
+            serializer = self.get_serializer(data=request.data)
+            if serializer.is_valid():
 
-            # Check if the book is issued to any user
-            if Book_Issue_Record.objects.filter(book_id=book).exists():
-                return Response({'status': 'error', 'message': 'Cannot delete book issued to users'}, status=status.HTTP_400_BAD_REQUEST)
+                book_id = serializer.validated_data.get('book_id')
+            
+                librarian_id = request.session.get('rest_librarian_id')
+                if librarian_id is None : 
+                    return Response({'status':'error','message':'You are not authorize for this operation'},status=status.HTTP_401_UNAUTHORIZED)
+                try:
+                    book = BookName.objects.get(book_id=book_id)
+                except BookName.DoesNotExist:
+                    return Response({'status': 'error', 'message': 'Book not found'}, status=status.HTTP_404_NOT_FOUND)
 
-            # If not issued, delete the book
-            book.delete()
-            return Response({'status': 'success', 'message': 'Book successfully deleted'}, status=status.HTTP_200_OK)
+                # Check if the book is issued to any user
+                if Book_Issue_Record.objects.filter(book_id=book).exists():
+                    return Response({'status': 'error', 'message': 'Cannot delete book issued to users'}, status=status.HTTP_400_BAD_REQUEST)
 
+                # If not issued, delete the book
+                book.delete()
+                return Response({'status': 'success', 'message': 'Book successfully deleted'}, status=status.HTTP_200_OK)
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
         except Exception as e:
             return Response({'status':'error','message':f'Internal server error {e}'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
         
-    @action(detail=False, methods=['post'])
+    @action(detail=False, methods=['get'])
     def unissued_books(self, request):
         try:
-            print("Is")
+        
             issued_books = Book_Issue_Record.objects.values_list('book_id', flat=True)
             unissued_books = BookName.objects.exclude(pk__in=issued_books)
 
@@ -411,6 +424,14 @@ user_id (in case of api we are using user_mail in session storage so that will h
 '''
 
 class UserGetBookView(viewsets.ViewSet):
+    def get_serializer_class(self):
+        if self.action == 'user_get_book':
+            return BookIDSerializer
+        return BookIssueSerializer
+
+    def get_serializer(self, *args, **kwargs):
+        return self.get_serializer_class()(*args, **kwargs)
+    
     @action(detail=False , methods=['post'])
     def user_get_book(self,request):
         try:
@@ -440,16 +461,37 @@ class UserGetBookView(viewsets.ViewSet):
         
     def list(self,request):
         try:
-            queryset = Book_Issue_Record.objects.all()
-            serializer = Book_Issue_Record_Serializer(queryset, many=True)
-
-            logger.info('Book Issue Record list retrieved successfully.')
-            return Response(serializer.data, status=status.HTTP_200_OK)
-
+            librarian_id = request.session.get('librarian_id')
+    
+            if librarian_id is None:    
+                  return Response({'status':'error','message':'You are not authorized for this operation'},status=status.HTTP_203_NON_AUTHORITATIVE_INFORMATION)
+            else:
+                queryset = Book_Issue_Record.objects.all()
+                serializer = Book_Issue_Record_Serializer(queryset, many=True)
+                logger.info('Book Issue Record list retrieved successfully.')
+                return Response(serializer.data, status=status.HTTP_200_OK)
+                
         except Exception as e:
             logger.error(f'Error Occured at Book Issue Record Retrievel{e}')
             return Response({'status':'error','message':'Internal Server Error'},status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-
+    
+    @action(detail=False , methods=['get'])
+    def user_book_issue_record(self,request):
+        try:
+            user_id = request.session.get('user_mail')
+            
+            if user_id is None:
+                  return Response({'status':'error','message':'You are not authorized for this operation'},status=status.HTTP_203_NON_AUTHORITATIVE_INFORMATION)
+            else :
+                user = User.objects.get(user_mail=user_id)
+                queryset = Book_Issue_Record.objects.filter(user_id=user)
+                serializer = Book_Issue_Record_Serializer(queryset , many = True)
+                logger.info('Book Issue Record list retrieved successfully.')
+                return Response(serializer.data, status=status.HTTP_200_OK)
+            
+        except Exception as e:
+            logger.error(f'Error Occured at Book Issue Record Retrievel{e}')
+            return Response({'status':'error','message':'Internal Server Error'},status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
     @action(detail=False, methods=['post'])
@@ -555,8 +597,3 @@ class UserGetBookView(viewsets.ViewSet):
 
 
 
-
-
-# Delete Book 
-
-# Delete Issue Request

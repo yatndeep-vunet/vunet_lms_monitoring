@@ -93,11 +93,10 @@ class UserLoginView(LogoutRequiredMixin,View):
     def post(self, request):
         user_mail = request.POST.get('user_mail')
         password = request.POST.get('password')
-
-        users = User.objects.all()
-
-        for user in users:
-            if user.user_mail == user_mail:
+       
+        user = User.objects.get(user_mail = user_mail)
+    
+        if user.user_mail == user_mail:
                 if user.password == password:
                     if user.is_email_verfied == True:
                         request.session['user_id'] = user.user_mail  # Store user ID in session
@@ -119,13 +118,15 @@ class UserLoginView(LogoutRequiredMixin,View):
                         "status_code" : 400
                     }
                     return render(request, 'user/login.html', context)
-            else:
-                context = {
+        else:
+                   context = {
                         "message" : "Invalid Credentials",
                         "status_code" : 400
                     }
-                return render(request, 'user/login.html', {"message": "Invalid Credentials","status_code":400})
+        return render(request, 'user/login.html', {"message": "Invalid Credentials","status_code":400})
+                
 
+            
 
 
 class UserHomeView(LoginRequiredMixin,View):
@@ -217,6 +218,8 @@ class UserListBookIssueRecord(LoginRequiredMixin,View):
             print("No Record Found")
             return render(request, 'user/issue_record.html')  # Render a different template if no records
         return render(request, 'user/issue_record.html', {'book_issue_records': book_issue_records})
+
+
 
 class CancelApproveRequest(LoginRequiredMixin,View):
     def post(self,request):
