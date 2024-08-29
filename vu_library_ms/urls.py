@@ -24,7 +24,8 @@ urlpatterns = [
     path('users/', include('user_app.urls')),  
     path('librarian/', include('librarian_app.urls')),
     path('api/',include('rest_api_app.urls')) , 
-    path('',views.HomeView.as_view() , name= 'home')
+    path('',views.HomeView.as_view() , name= 'home'),
+    path('upload',views.upload_excel,name='upload excel')
 ]
 
 urlpatterns += staticfiles_urlpatterns()
