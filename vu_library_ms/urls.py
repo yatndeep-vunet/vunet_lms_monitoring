@@ -25,6 +25,7 @@ urlpatterns = [
     path('librarian/', include('librarian_app.urls')),
     path('api/',include('rest_api_app.urls')) , 
     path('',views.HomeView.as_view() , name= 'home'),
+    path('', include('django_prometheus.urls') , name='prometheus-django-metrics'),
     path('upload',views.upload_excel,name='upload excel')
 ]
 
