@@ -13,7 +13,7 @@ docker --version
 ### 3. Run the docker build command .
 
 ```bash
-docker-compose up --build
+docker compose up --build
 ```
 
 ### 4. Now you can see :
