@@ -1,0 +1,20 @@
+groups:
+  - name: high_cpu_and_hit_alerts
+    rules:
+      - alert: HighCPUUsage
+        expr: avg(rate(container_cpu_user_seconds_total{container_name!="",container_name!="POD"}[1m])) by (container_name) > 0.9
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: "High CPU usage detected"
+          description: "Container {{ $labels.container_name }} has a high CPU usage rate for the last 5 minutes."
+
+      - alert: HighCustomRouteHits
+        expr: rate(django_custom_route_hits_total[5m]) > 0.1
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "High number of hits on custom route"
+          description: "The custom route has been hit more than 0.1 times per second over the last 5 minutes."

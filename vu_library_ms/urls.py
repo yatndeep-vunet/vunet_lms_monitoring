@@ -26,7 +26,8 @@ urlpatterns = [
     path('api/',include('rest_api_app.urls')) , 
     path('',views.HomeView.as_view() , name= 'home'),
     path('', include('django_prometheus.urls') , name='prometheus-django-metrics'),
-    path('upload',views.upload_excel,name='upload excel')
+    path('upload',views.upload_excel,name='upload excel'),
+    path('trigger-alert/', views.trigger_alert, name='trigger_alert')
 ]
 
 urlpatterns += staticfiles_urlpatterns()

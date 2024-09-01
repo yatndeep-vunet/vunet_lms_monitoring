@@ -1,27 +1,38 @@
 version: '3'
 
 services:
-  server: 
-    env_file: 
-     - .env
-    build: . 
+  server:
+    env_file:
+      - .env
+    build: .
     command: sh -c "python manage.py makemigrations && python manage.py migrate && python manage.py runserver 0.0.0.0:8000"
     container_name: vunet-lms-app
-    volumes: 
-     - .:/vunet-lms-app
-    ports: 
+    volumes:
+      - .:/vunet-lms-app
+    ports:
       - "8000:8000"
   
   prometheus:
-    image: prom/prometheus
+    image: prom/prometheus:v2.37.0  # Specify a version
     container_name: prometheus
     volumes:
       - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+      - ./prometheus/alert_rules.yml:/etc/prometheus/alert_rules.yml
     ports:
-      - "9091:9090"
+      - "9090:9090"  # Map host port 9090 to container port 9090
+  
+  alertmanager:
+    env_file:
+      - .env
+    image: prom/alertmanager:v0.27.0  # Specify a version
+    container_name: alertmanager
+    volumes:
+      - ./prometheus/alertmanager.yml:/etc/alertmanager/alertmanager.yml
+    ports:
+      - "9093:9093"  # Ensure this matches the port in Prometheus configuration
   
   grafana:
-    image: grafana/grafana
+    image: grafana/grafana:9.5.0  # Specify a version
     container_name: grafana
     depends_on:
       - prometheus
@@ -29,3 +40,16 @@ services:
       - "3000:3000"
     environment:
       GF_SECURITY_ADMIN_PASSWORD: "admin"  # Optional: Set Grafana admin password
+  # cadvisor
+
+  cadvisor:
+    image: gcr.io/cadvisor/cadvisor
+    ports:
+      - "8080:8080"
+    volumes:
+      - /:/rootfs:ro
+      - /var/run:/var/run:ro
+      - /sys:/sys:ro
+      - /var/lib/docker/:/var/lib/docker:ro
+    privileged: true
+

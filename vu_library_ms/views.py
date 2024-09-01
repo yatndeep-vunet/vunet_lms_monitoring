@@ -2,6 +2,8 @@ from django.shortcuts import render, redirect , get_object_or_404
 from django.views import View
 from django.middleware.csrf import get_token
 
+from prometheus_client import Counter
+
 class HomeView(View):
     def get(self, request):
         return render(request, 'user/index.html')
@@ -37,3 +39,15 @@ def upload_excel(request):
         form = ExcelUploadForm()
 
     return render(request, 'upload.html', {'csrf_token': csrf_token})
+
+
+
+
+# Create a custom Prometheus counter
+hit_counter = Counter('django_custom_route_hits', 'Number of hits on the custom route')
+
+def trigger_alert(request):
+    # Increment the counter
+    hit_counter.inc()
+    return HttpResponse("Alert triggered via Prometheus")
+
