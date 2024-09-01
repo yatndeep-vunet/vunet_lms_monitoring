@@ -1,6 +1,6 @@
 from django.db import models
-
-class User(models.Model):
+from django_prometheus.models import ExportModelOperationsMixin
+class User(ExportModelOperationsMixin('Users'),models.Model):
     user_id = models.AutoField(primary_key=True)  # Auto-incrementing primary key
     user_name = models.CharField(max_length=255)
     password = models.CharField(max_length=255)
@@ -11,7 +11,7 @@ class User(models.Model):
     def __str__(self):
         return self.user_name
 
-class BookName(models.Model):
+class BookName(ExportModelOperationsMixin('Books'),models.Model):
     book_id = models.AutoField(primary_key=True)  # Auto-incrementing primary key
     book_name = models.CharField(max_length=255)
     book_author_name = models.CharField(max_length=255)
@@ -20,7 +20,7 @@ class BookName(models.Model):
     def __str__(self):
         return self.book_name
 
-class Books_Category(models.Model):
+class Books_Category(ExportModelOperationsMixin('Book_category'),models.Model):
     book_category_id = models.AutoField(primary_key=True)  # Auto-incrementing primary key
     book_category = models.CharField(max_length=255)
 
@@ -28,7 +28,7 @@ class Books_Category(models.Model):
         return self.book_category
 
 
-class Book_Issue_Record(models.Model):
+class Book_Issue_Record(ExportModelOperationsMixin('Book_Issue_Record'),models.Model):
     book_issue_id = models.AutoField(primary_key=True)  # Auto-incrementing primary key
     book_id = models.ForeignKey('BookName', on_delete=models.CASCADE)  # Changed to ForeignKey for proper relation
     user_id = models.ForeignKey('User', on_delete=models.CASCADE)  # Changed to ForeignKey for proper relation

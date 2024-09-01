@@ -115,7 +115,14 @@ WSGI_APPLICATION = 'vu_library_ms.wsgi.application'
 # }
 
 DATABASES = {
-     'default' : dj_database_url.parse(os.getenv("DATABASE_URL"))
+    'default': {
+        'ENGINE': 'django_prometheus.db.backends.postgresql',
+        'NAME': os.getenv('DB_NAME'),
+        'USER': os.getenv('DB_USER_NAME'),
+        'PASSWORD': os.getenv('DB_PASSWORD'),
+        'HOST': os.getenv('DB_HOST'),  # e.g., 'localhost' or an IP address
+        'PORT': '5432',  # e.g., '5432'
+    }
 }
 
 
